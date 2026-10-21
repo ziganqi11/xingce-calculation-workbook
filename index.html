@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#24445a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>资料分析计算练习本</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">∑</span><span><strong>资料分析计算练习本</strong><small>一题一页，练完就复盘</small></span></div>
+      <nav aria-label="主导航">
+        <button class="nav active" data-view="practice">练习</button>
+        <button class="nav" data-view="records">记录</button>
+        <button class="nav" data-view="notebook">笔记</button>
+      </nav>
+      <div class="status-stack"><div id="offline-status" class="save-status">正在检查离线安装…</div><div id="save-status" class="save-status">正在读取此设备的记录…</div></div>
+    </header>
+
+    <main id="practice" class="view active">
+      <aside class="setup panel">
+        <div class="panel-head"><span class="eyebrow">练习设置</span><span class="muted">按自己的节奏来</span></div>
+        <label class="field">练习题型<select id="mode">
+          <optgroup label="基础计算"><option value="add3">三位数加法</option><option value="sub3">三位数减法</option><option value="addsub3">三位数加减</option><option value="add4">四数相加</option><option value="mul3x1">三位数乘一位数</option><option value="div3x1">三位数除一位数</option><option value="mul2x2">两位数乘两位数</option><option value="big9">大九九乘法表</option><option value="mulEstimate">乘法估算</option></optgroup>
+          <optgroup label="资料分析计算">
+          <option value="div53">五除三（五位数÷三位数）</option><option value="base">求基期量</option><option value="growth">求增长量</option><option value="rate">求增长率</option><option value="current">求现期量</option><option value="share">求比重</option><option value="baseShare">求基期比重</option><option value="average">求平均数</option><option value="growthCompare">比较增长量</option><option value="mixed">资料分析混合</option>
+          </optgroup>
+        </select></label>
+        <div class="two-fields quick-fields">
+          <label class="field">练习方式<select id="feedback-mode"><option value="training">训练：每题看答案</option><option value="race">竞速：做完一组再看答案</option></select></label>
+          <label class="field">本组题量<input id="count" type="number" min="1" max="200" value="15" inputmode="numeric"></label>
+        </div>
+        <details class="advanced-settings"><summary>更多设置</summary>
+        <div class="two-fields">
+          <label class="field">当前阶段<select id="level"><option value="1">入门</option><option value="2">熟练</option><option value="3">冲刺</option><option value="4">自定义</option></select></label>
+          <label class="field">每题目标秒数<input id="target" type="number" min="1" max="600" value="30" inputmode="numeric"></label>
+        </div>
+        <div class="two-fields">
+          <label class="field">数据下限<input id="min" type="number" min="10" max="999999" value="1000" inputmode="numeric"></label>
+          <label class="field">数据上限<input id="max" type="number" min="20" max="999999" value="9999" inputmode="numeric"></label>
+        </div>
+        <div class="two-fields">
+          <label class="field">结果保留<select id="precision"><option value="0">整数</option><option value="1">1 位小数</option><option value="2">2 位小数</option><option value="3">3 位小数</option><option value="4">4 位小数</option></select></label>
+          <div></div>
+        </div>
+        <div class="two-fields">
+          <label class="field">直除被除数位数<input id="numerator-digits" type="number" min="3" max="7" value="5" inputmode="numeric"></label>
+          <label class="field">直除除数位数<input id="denominator-digits" type="number" min="2" max="4" value="3" inputmode="numeric"></label>
+        </div>
+        <div class="two-fields">
+          <label class="field">允许误差（%）<input id="tolerance" type="number" min="0" max="50" step="0.1" value="3" inputmode="decimal"></label>
+          <label class="field">除法写法<select id="division-style"><option value="fraction">上下分式</option><option value="symbol">÷ 符号</option></select></label>
+        </div>
+        <label class="check"><input id="repeat-errors" type="checkbox"><span>优先重练历史错题</span></label>
+        <p id="range-help" class="hint">“五除三”先按五位数除以三位数实现；允许误差可设 0%～50%，比较大小题仍按选项精确判定。</p>
+        </details>
+        <button id="start" class="primary full">开始新的一组 <span aria-hidden="true">→</span></button>
+        <button id="resume" class="secondary full" hidden>继续上次进度</button>
+      </aside>
+
+      <section class="exercise panel">
+        <div class="exercise-head"><div><span class="eyebrow">当前练习</span><h1 id="exercise-title">准备好就开始</h1></div><div id="timer" class="timer">00:00</div></div>
+        <div class="progress-line"><div id="progress-fill"></div></div>
+        <div class="progress-meta"><span id="progress-label">设置题型和题量，开始练习</span><span id="score-label">正确 0</span></div>
+        <div id="question-box" class="question-box idle">
+          <div id="question-hint" class="question-hint">资料分析 · 可自由调整</div>
+          <div id="question" class="question">从基期、增量或直除开始，把计算过程留在旁边。</div>
+          <div id="answer-area" class="answer-area" hidden>
+            <label for="answer">你的答案</label>
+            <div id="answer-rule" class="answer-rule"></div>
+            <div class="answer-row"><input id="answer" type="text" inputmode="decimal" autocomplete="off" placeholder="输入结果"><button id="submit" class="primary">提交答案</button></div>
+            <div id="feedback" class="feedback" aria-live="polite"></div>
+            <div class="question-actions"><button id="skip" class="text-button">跳过此题</button><button id="next" class="secondary" hidden>下一题 →</button></div>
+          </div>
+        </div>
+        <div class="exercise-foot"><span>提示：可以在右侧写计算过程；每道题都会保留用时和演草。</span><button id="finish" class="text-button" hidden>结束本组</button></div>
+      </section>
+
+      <aside class="scratch panel">
+        <div class="panel-head"><span class="eyebrow">演草与笔记</span><span id="scratch-linked" class="muted">随题保存</span></div>
+        <div class="draw-tools"><button class="tool selected" data-tool="pen" title="画笔">✎ 画笔</button><button class="tool" data-tool="eraser" title="橡皮">◻ 橡皮</button><button id="undo" class="tool" title="撤销">↶ 撤销</button><button id="clear" class="tool" title="清空">清空</button></div>
+        <div class="color-tools"><button class="swatch selected" data-color="#273e55" style="--swatch:#273e55" aria-label="深蓝色"></button><button class="swatch" data-color="#bb6541" style="--swatch:#bb6541" aria-label="橘红色"></button><button class="swatch" data-color="#458578" style="--swatch:#458578" aria-label="绿色"></button><label>笔迹粗细 <input id="pen-size" type="range" min="2" max="12" value="3"></label></div>
+        <div class="canvas-wrap"><canvas id="canvas" aria-label="演草板，可用手指或触控笔书写"></canvas><span class="canvas-watermark">在这里演算</span></div>
+        <label class="field note-field">文字笔记<textarea id="question-note" rows="4" placeholder="记下口算方法、出错原因，或下次提醒自己的一句话"></textarea></label>
+      </aside>
+    </main>
+
+    <main id="records" class="view records-view">
+      <div class="page-heading"><div><span class="eyebrow">练习档案</span><h1>看见自己练过什么</h1></div><div class="archive-actions"><button id="import" class="secondary">导入备份</button><input id="import-file" type="file" accept="application/json,.json" hidden><button id="export" class="secondary">导出全部记录 JSON</button></div></div>
+      <div id="stats" class="stats"></div>
+      <div class="records-grid"><section class="panel"><div class="panel-head"><span class="eyebrow">每组记录</span></div><div id="sessions-list" class="list"></div></section><section class="panel"><div class="panel-head"><span class="eyebrow">逐题复盘</span><select id="record-filter"><option value="all">全部题目</option><option value="wrong">错题</option><option value="skip">跳过</option></select></div><div id="answers-list" class="list"></div></section></div>
+    </main>
+
+    <main id="notebook" class="view notebook-view">
+      <div class="page-heading"><div><span class="eyebrow">随手记录</span><h1>把方法写成自己的</h1></div><button id="new-note" class="primary">新建笔记</button></div>
+      <div class="notebook-grid"><section class="panel"><div class="panel-head"><span class="eyebrow">笔记列表</span></div><div id="notes-list" class="list"></div></section><section class="panel editor"><label class="field">标题<input id="note-title" placeholder="例如：增长量的 n+1 速算"></label><label class="field">内容<textarea id="note-body" rows="15" placeholder="写下方法、例题、易错点……"></textarea></label><div class="editor-actions"><span id="note-stamp" class="muted"></span><button id="delete-note" class="text-button" hidden>删除笔记</button><button id="save-note" class="primary">保存笔记</button></div></section></div>
+    </main>
+  </div>
+  <div id="review-overlay" class="review-overlay" hidden>
+    <div class="review-card" role="dialog" aria-modal="true" aria-labelledby="review-title">
+      <div class="review-head"><div><span class="eyebrow">逐题演草</span><h2 id="review-title"></h2></div><button id="close-review" class="secondary">关闭</button></div>
+      <div id="review-explanation" class="item-details"></div>
+      <div class="review-canvas-wrap"><canvas id="review-canvas"></canvas></div>
+      <div id="review-note" class="item-details"></div>
+    </div>
+  </div>
+  <script src="./app.js" defer></script>
+</body>
+</html>

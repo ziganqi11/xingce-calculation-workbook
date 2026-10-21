@@ -1,0 +1,11 @@
+{
+  "name": "资料分析计算练习本",
+  "short_name": "资料计算",
+  "description": "资料分析速算、演草与逐题复盘。安装后可断网练习。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#edf3f3",
+  "theme_color": "#24445a",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
