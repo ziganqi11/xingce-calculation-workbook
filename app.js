@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
-const modeNames = {add3:'三位数加法',sub3:'三位数减法',addsub3:'三位数加减',add4:'四数相加',mul3x1:'三位数乘一位数',div3x1:'三位数除一位数',mul2x2:'两位数乘两位数',big9:'大九九乘法表',unitDiff:'本位差表',mulEstimate:'乘法估算',div53:'五除三直除',base:'求基期量',growth:'求增长量',rate:'求增长率',current:'求现期量',share:'求比重',baseShare:'求基期比重',average:'求平均数',growthCompare:'比较增长量',mixed:'资料分析混合'};
-const defaults = {mode:'base',feedbackMode:'training',level:'1',count:15,min:1000,max:9999,target:45,precision:0,numeratorDigits:5,denominatorDigits:3,tolerance:3,divisionStyle:'fraction',repeatErrors:false};
-const presets = {1:{min:1000,max:9999,target:45},2:{min:5000,max:49999,target:40},3:{min:10000,max:99999,target:35}};
+const modeNames = {add3:'三位数加法',sub3:'三位数减法',addsub3:'三位数加减',add4:'四数相加',mul3x1:'三位数乘一位数',div3x1:'三位数除一位数',mul2x2:'两位数乘两位数',big9:'大九九乘法表',unitDiff:'本位差表',mulEstimate:'乘法估算',div53:'五除三直除',base:'求基期量',growth:'求增长量',rate:'求增长率',current:'求现期量',share:'求比重',baseShare:'求基期比重',average:'求平均数',growthCompare:'比较增长量',mixedRate:'混合增长率',differenceRate:'差值增长率',mixed:'资料分析混合'};
+const defaults = {mode:'base',feedbackMode:'training',level:'3',count:20,min:10000,max:99999,target:35,precision:0,numeratorDigits:5,denominatorDigits:3,tolerance:3,divisionStyle:'fraction',fontFamily:'song',repeatErrors:false};
+const legacyPresets = {1:{min:1000,max:9999,target:45},2:{min:5000,max:49999,target:40},3:{min:10000,max:99999,target:35}};
 let state = {version:1,updatedAt:0,settings:{...defaults},active:null,sessions:[],notes:[]};
 let loaded = false, saving = false, dirty = false, saveTimer = null, selectedNote = null;
 const pendingKey = 'xingce-workbook-pending-v1';
@@ -20,8 +20,9 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString('zh-CN',{hour12:f
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const activeQuestion = () => state.active?.questions[state.active.index] || null;
 const isTableQuestion = q => !!q && (q.mode==='big9'||q.mode==='unitDiff');
-function tableSpec(mode){return mode==='big9'?{columns:Array.from({length:8},(_,i)=>i+12),rows:Array.from({length:8},(_,i)=>i+2),symbol:'×',expected:(row,col)=>row*col}: {columns:Array.from({length:10},(_,i)=>i),rows:Array.from({length:9},(_,i)=>i+1),symbol:'−',expected:(row,col)=>(col-row+10)%10}}
-function focusQuestion(){const q=activeQuestion();if(isTableQuestion(q))$('table-grid').querySelector('input:not(:disabled)')?.focus();else $('answer').focus()}
+function tableSpec(mode){return mode==='big9'?{columns:Array.from({length:8},(_,i)=>i+12),rows:Array.from({length:8},(_,i)=>i+2),symbol:'×',valid:()=>true,expected:(row,col)=>row*col}: {columns:Array.from({length:9},(_,i)=>i),rows:Array.from({length:9},(_,i)=>i+1),symbol:'−',valid:(row,col)=>col<row,expected:(row,col)=>col+10-row}}
+function focusQuestion(){if(matchMedia('(pointer:coarse)').matches)return;const q=activeQuestion();if(isTableQuestion(q))$('table-grid').querySelector('input:not(:disabled)')?.focus();else $('answer').focus()}
+function applyFont(){document.body.dataset.font=state.settings.fontFamily||'song'}
 
 function setStatus(message,error=false){$('save-status').textContent=message;$('save-status').classList.toggle('error',error)}
 function openDB(){return new Promise((resolve,reject)=>{if(!('indexedDB' in window)){reject(new Error('此浏览器没有本地数据库'));return}const request=indexedDB.open(dbName,1);request.onupgradeneeded=()=>request.result.createObjectStore(dbStore);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error)})}
@@ -37,6 +38,16 @@ async function load(){
     const source=candidates.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0]||{version:1,updatedAt:0,settings:{},active:null,sessions:[],notes:[]};
     state={version:1,updatedAt:source.updatedAt||0,settings:{...defaults,...source.settings},active:source.active||null,sessions:Array.isArray(source.sessions)?source.sessions:[],notes:Array.isArray(source.notes)?source.notes:[]};
     if(!modeNames[state.settings.mode])state.settings.mode=defaults.mode;
+    const oldLevel=source.settings?.level;
+    if(oldLevel==='1'||oldLevel==='2'){
+      const old=legacyPresets[oldLevel];
+      if(source.settings?.min===old.min&&source.settings?.max===old.max){state.settings.min=defaults.min;state.settings.max=defaults.max}
+      if(source.settings?.target===old.target)state.settings.target=defaults.target;
+    }
+    if(!('count' in (source.settings||{}))||source.settings.count===15)state.settings.count=20;
+    state.settings.level='3';
+    if(!['song','kai','sans'].includes(state.settings.fontFamily))state.settings.fontFamily='song';
+    const migratedSettings=JSON.stringify(state.settings)!==JSON.stringify(source.settings||{});
     if(state.active){
       state.active.questionStartedAt=Date.now();
       const byId=new Map(state.active.questions.map(q=>[q.id,q]));
@@ -44,7 +55,7 @@ async function load(){
     }
     loaded=true; setStatus(remote?'记录已连接 · 同时保存到此设备':'离线可练 · 记录保存在此设备');
     fillSettings(); renderAll();
-    if(source!==local||(remote&&source!==remote)||source===recovered){dirty=true;flush()}
+    if(migratedSettings||source!==local||(remote&&source!==remote)||source===recovered){dirty=true;flush()}
     else if(recovered)try{localStorage.removeItem(pendingKey)}catch{}
   }catch(err){setStatus(`读取记录失败：${err.message}`,true)}
 }
@@ -61,20 +72,20 @@ async function flush(){
   }catch(err){dirty=true;setStatus(`此设备保存失败：${err.message}`,true);setTimeout(flush,3000)}
   finally{saving=false;if(dirty)setTimeout(flush,250)}
 }
-function fillSettings(){const s=state.settings; for(const key of ['mode','level','count','min','max','target','precision','tolerance'])$(key).value=s[key];$('feedback-mode').value=s.feedbackMode||'training';$('numerator-digits').value=s.numeratorDigits;$('denominator-digits').value=s.denominatorDigits;$('division-style').value=s.divisionStyle;$('repeat-errors').checked=s.repeatErrors;if(s.level==='4')document.querySelector('.advanced-settings').open=true}
+function fillSettings(){const s=state.settings; for(const key of ['mode','count','min','max','target','precision','tolerance'])$(key).value=s[key];$('feedback-mode').value=s.feedbackMode||'training';$('font-family').value=s.fontFamily||'song';$('numerator-digits').value=s.numeratorDigits;$('denominator-digits').value=s.denominatorDigits;$('division-style').value=s.divisionStyle;$('repeat-errors').checked=s.repeatErrors;applyFont()}
 function readSettings(){
-  const s={mode:$('mode').value,feedbackMode:$('feedback-mode').value,level:$('level').value,count:clamp(number($('count').value,15),1,200),min:clamp(number($('min').value,1000),10,999999),max:clamp(number($('max').value,9999),20,999999),target:clamp(number($('target').value,45),1,600),precision:clamp(number($('precision').value,0),0,8),numeratorDigits:clamp(number($('numerator-digits').value,5),3,7),denominatorDigits:clamp(number($('denominator-digits').value,3),2,4),tolerance:clamp(number($('tolerance').value,3),0,50),divisionStyle:$('division-style').value,repeatErrors:$('repeat-errors').checked};
+  const s={mode:$('mode').value,feedbackMode:$('feedback-mode').value,level:'3',count:clamp(number($('count').value,20),1,200),min:clamp(number($('min').value,10000),10,999999),max:clamp(number($('max').value,99999),20,999999),target:clamp(number($('target').value,35),1,600),precision:clamp(number($('precision').value,0),0,8),numeratorDigits:clamp(number($('numerator-digits').value,5),3,7),denominatorDigits:clamp(number($('denominator-digits').value,3),2,4),tolerance:clamp(number($('tolerance').value,3),0,50),divisionStyle:$('division-style').value,fontFamily:$('font-family').value,repeatErrors:$('repeat-errors').checked};
   s.min=Math.trunc(s.min);s.max=Math.trunc(s.max);s.count=Math.trunc(s.count);s.precision=Math.trunc(s.precision);
   if(s.max<s.min)s.max=s.min;
   return s;
 }
 function round(value,digits){const power=10**digits;return Math.round((value+Number.EPSILON)*power)/power}
-function rateFor(s){const value=s.level==='1'?rand(3,38):s.level==='2'?rand(6,76)/2:rand(30,380)/10;const sign=s.level==='3'&&Math.random()<.22?-1:1;return round(value*sign,2)}
+function rateFor(){const value=rand(30,380)/10;const sign=Math.random()<.22?-1:1;return round(value*sign,2)}
 function rateWords(p){return p<0?`同比下降 ${Math.abs(p)}%`:`同比增长 ${p}%`}
 function unitRule(s,kind='数值'){return `请填${kind}，${s.precision===0?'四舍五入到整数':`保留 ${s.precision} 位小数`}`}
 function makeQuestion(s){
-  const mode=s.mode==='mixed'?choose(['div53','base','growth','rate','current','share','baseShare','average','growthCompare']):s.mode;
-  if(isTableQuestion({mode}))return {id:uid(),mode,prompt:mode==='big9'?'横排 12～19，竖排 2～9：填满大九九乘法表。':'横排 0～9，竖排减数 1～9：不足时借 10，只填本位差。',answer:mode==='big9'?'64 格全部正确':'90 格全部正确',explanation:mode==='big9'?'每格 = 上方数字 × 左侧数字。':'每格 = (上方数字 − 左侧数字 + 10) 取个位；如 0−9=1、1−9=2。',responseHint:'',division:null,tableValues:{},tableWrongKeys:[],tableStatus:null,strokes:[],note:'',createdAt:new Date().toISOString()};
+  const mode=s.mode==='mixed'?choose(['div53','base','growth','rate','current','share','baseShare','average','growthCompare','mixedRate','differenceRate']):s.mode;
+  if(isTableQuestion({mode}))return {id:uid(),mode,prompt:mode==='big9'?'横排 12～19，竖排 2～9：填满大九九乘法表。':'只填小减大（本位不够减、向前借 1）的 45 格。',answer:mode==='big9'?'64 格全部正确':'45 格全部正确',explanation:mode==='big9'?'每格 = 上方数字 × 左侧数字。':'每格 = 上方小数 + 10 − 左侧大数；如 0−9=1、1−9=2。',responseHint:'',division:null,tableValues:{},tableWrongKeys:[],tableStatus:null,strokes:[],note:'',createdAt:new Date().toISOString()};
   const min=s.min,max=s.max,A=rand(min,max),p=rateFor(s),r=p/100;
   let prompt='',answer=0,explanation='',responseHint=unitRule(s),division=null;
   if(mode==='add3'||mode==='sub3'||mode==='addsub3'){
@@ -155,6 +166,25 @@ function makeQuestion(s){
     explanation=`甲增长量≈${round(gx,1)}，乙增长量≈${round(gy,1)}；因此${answer===1?'甲':'乙'}更大。`;
     responseHint='输入 1 或 2';
   }
+  if(mode==='mixedRate'){
+    const x=rand(min,max),y=rand(Math.round(x*.35),Math.round(x*.85));
+    const px=rateFor(),py=rateFor();
+    const baseX=x/(1+px/100),baseY=y/(1+py/100);
+    answer=round(((x+y)/(baseX+baseY)-1)*100,s.precision);
+    prompt=`某产业由甲、乙两部分组成。甲现期为 ${x}，${rateWords(px)}；乙现期为 ${y}，${rateWords(py)}。该产业整体同比增长率约为百分之几？`;
+    explanation=`两部分基期量分别约为 ${round(baseX,2)}、${round(baseY,2)}；整体增长率 = [(${x}+${y}) ÷ (${round(baseX,2)}+${round(baseY,2)}) − 1] × 100% ≈ ${answer}%。`;
+    responseHint=unitRule(s,'百分数数值，不带 % 号')+'；下降填负数';
+  }
+  if(mode==='differenceRate'){
+    const x=rand(min,max),y=rand(Math.round(x*.25),Math.round(x*.40));
+    const px=rateFor(),py=rateFor();
+    const baseX=x/(1+px/100),baseY=y/(1+py/100);
+    const baseGap=baseX-baseY;
+    answer=round(((x-y)/baseGap-1)*100,s.precision);
+    prompt=`甲指标现期为 ${x}，${rateWords(px)}；乙指标现期为 ${y}，${rateWords(py)}。甲乙差值的同比增长率约为百分之几？`;
+    explanation=`甲乙基期差值 = ${x} ÷ (1+${px}%) − ${y} ÷ (1+${py}%) ≈ ${round(baseGap,2)}；现期差值 = ${x}-${y}=${x-y}；差值增长率 = (现期差值 ÷ 基期差值 − 1) × 100% ≈ ${answer}%。`;
+    responseHint=unitRule(s,'百分数数值，不带 % 号')+'；下降填负数';
+  }
   return {id:uid(),mode,prompt,answer,explanation,responseHint,division,strokes:[],note:'',createdAt:new Date().toISOString()};
 }
 function errorPool(s){return state.sessions.flatMap(x=>x.answers||[]).filter(x=>x.status==='wrong'&&x.question?.mode&&(s.mode==='mixed'||s.mode===x.question.mode)).map(x=>x.question).slice(-100)}
@@ -202,7 +232,7 @@ function renderTable(q,a){
   if(!isTableQuestion(q)){ $('table-grid').innerHTML=''; return }
   const spec=tableSpec(q.mode),wrong=new Set(q.tableWrongKeys||[]),values=q.tableValues||{};
   $('table-grid').classList.toggle('unit-diff',q.mode==='unitDiff');
-  $('table-grid').innerHTML=`<table class="practice-table"><caption>${q.mode==='big9'?'大九九乘法表':'本位差表：不足时借 10，只填个位'}</caption><thead><tr><th scope="col">${spec.symbol}</th>${spec.columns.map(col=>`<th scope="col">${col}</th>`).join('')}</tr></thead><tbody>${spec.rows.map(row=>`<tr><th scope="row">${row}</th>${spec.columns.map(col=>{const key=`${row}-${col}`;return `<td><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="${col} ${spec.symbol} ${row}" data-cell="${key}" class="${wrong.has(key)?'wrong':''}" value="${escapeHtml(values[key]||'')}" ${a.reviewing?'disabled':''}></td>`}).join('')}</tr>`).join('')}</tbody></table>`;
+  $('table-grid').innerHTML=`<table class="practice-table"><caption>${q.mode==='big9'?'大九九乘法表':'本位差表：仅小减大，借 10 求本位差'}</caption><thead><tr><th scope="col">${spec.symbol}</th>${spec.columns.map(col=>`<th scope="col">${col}</th>`).join('')}</tr></thead><tbody>${spec.rows.map(row=>`<tr><th scope="row">${row}</th>${spec.columns.map(col=>{if(!spec.valid(row,col))return '<td class="unused-cell" aria-hidden="true"></td>';const key=`${row}-${col}`;return `<td><input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="${col} ${spec.symbol} ${row}" data-cell="${key}" class="${wrong.has(key)?'wrong':''}" value="${escapeHtml(values[key]||'')}" ${a.reviewing?'disabled':''}></td>`}).join('')}</tr>`).join('')}</tbody></table>`;
   $('table-summary').textContent=a.reviewing?'整表全部正确，已记入练习记录。':q.tableStatus||'填好后检查，错格会标红；空格留白。';
   $('table-check').hidden=!!a.reviewing;$('table-next').hidden=!a.reviewing;
   $('table-next').textContent=a.index===a.questions.length-1?'完成本组 →':'下一题 →';
@@ -210,8 +240,8 @@ function renderTable(q,a){
 function checkTable(){
   const a=state.active,q=activeQuestion();if(!a||!isTableQuestion(q)||a.reviewing)return;
   const spec=tableSpec(q.mode),wrong=[],values=q.tableValues||{};let correct=0,blank=0;
-  for(const row of spec.rows)for(const col of spec.columns){const key=`${row}-${col}`,value=String(values[key]||'').trim();if(!value)blank++;else if(Number(value)===spec.expected(row,col))correct++;else wrong.push(key)}
-  const total=spec.rows.length*spec.columns.length;
+  for(const row of spec.rows)for(const col of spec.columns){if(!spec.valid(row,col))continue;const key=`${row}-${col}`,value=String(values[key]||'').trim();if(!value)blank++;else if(Number(value)===spec.expected(row,col))correct++;else wrong.push(key)}
+  const total=spec.rows.reduce((n,row)=>n+spec.columns.filter(col=>spec.valid(row,col)).length,0);
   q.tableWrongKeys=wrong;q.tableStatus=`正确 ${correct}/${total} · 错误 ${wrong.length} · 未填 ${blank}${wrong.length?'；红格可直接修改':''}`;
   if(correct===total){a.answers.push({question:q,given:`${correct}/${total} 格正确`,status:'correct',seconds:Math.max(1,Math.round(((a.elapsedBefore||0)+Date.now()-a.questionStartedAt)/1000)),at:new Date().toISOString()});a.reviewing=true;renderProgress()}
   queueSave();renderTable(q,a);
@@ -226,7 +256,7 @@ function renderProgress(){
 function renderPractice(){
   const a=state.active,q=activeQuestion();
   $('resume').hidden=!a;$('finish').hidden=!a;
-  $('exercise-title').textContent=a?`${modeNames[a.settings.mode]} · ${a.settings.level==='4'?'自定义':(['','入门','熟练','冲刺'][+a.settings.level])}`:'准备好就开始';
+  $('exercise-title').textContent=a?`${modeNames[a.settings.mode]} · 高难度`:'准备好就开始';
   $('question-box').classList.toggle('idle',!q);
   $('question-box').classList.toggle('is-math',!!q&&['add3','sub3','addsub3','add4','mul3x1','div3x1','mul2x2','mulEstimate','div53'].includes(q.mode));
   $('question-box').classList.toggle('is-table',isTableQuestion(q));
@@ -286,12 +316,14 @@ function drawStrokes(){ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight)
 function point(event){const rect=canvas.getBoundingClientRect();return [clamp((event.clientX-rect.left)/rect.width,0,1),clamp((event.clientY-rect.top)/rect.height,0,1)]}
 
 document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
-$('level').addEventListener('change',()=>{const p=presets[$('level').value];if(p){$('min').value=p.min;$('max').value=p.max;$('target').value=p.target}else document.querySelector('.advanced-settings').open=true});
-for(const id of ['mode','feedback-mode','level','count','min','max','target','precision','numerator-digits','denominator-digits','tolerance','division-style','repeat-errors'])$(id).addEventListener('change',()=>{if(id==='feedback-mode'&&$('feedback-mode').value==='race'&&$('count').value==='15')$('count').value='10';if(id==='mode'&&['big9','unitDiff'].includes($('mode').value)&&$('count').value==='15')$('count').value='1';state.settings=readSettings();queueSave()});
+for(const id of ['mode','feedback-mode','font-family','count','min','max','target','precision','numerator-digits','denominator-digits','tolerance','division-style','repeat-errors'])$(id).addEventListener('change',()=>{if(id==='mode'){
+  const wasTable=['big9','unitDiff'].includes(state.settings.mode),isTable=['big9','unitDiff'].includes($('mode').value);
+  if(isTable&&!wasTable&&$('count').value==='20')$('count').value='1';
+  if(wasTable&&!isTable&&$('count').value==='1')$('count').value='20';
+}state.settings=readSettings();applyFont();queueSave()});
 $('start').addEventListener('click',startPractice);
 $('division-trigger').addEventListener('click',()=>window.LongDivisionDemo.open(activeQuestion(),state.active?.settings));
-$('keypad-toggle').addEventListener('click',()=>{const panel=$('answer-keypad'),open=panel.hidden;panel.hidden=!open;$('keypad-toggle').setAttribute('aria-expanded',String(open))});
-$('answer-keypad').addEventListener('click',event=>{const key=event.target.closest('[data-key]')?.dataset.key;if(!key)return;const input=$('answer');let value=input.value;if(key==='clear')value='';else if(key==='backspace')value=value.slice(0,-1);else if(key==='sign')value=value.startsWith('-')?value.slice(1):`-${value}`;else if(key==='decimal'){if(!value.includes('.'))value+=(value===''||value==='-'?'0.':'.')}else if(value==='0'||value==='-0')value=(value.startsWith('-')?'-':'')+key;else value+=key;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))});
+$('answer-keypad').addEventListener('click',event=>{const key=event.target.closest('[data-key]')?.dataset.key;if(!key)return;const input=$('answer');if(input.disabled)return;let value=input.value;if(key==='clear')value='';else if(key==='backspace')value=value.slice(0,-1);else if(key==='sign')value=value.startsWith('-')?value.slice(1):`-${value}`;else if(key==='decimal'){if(!value.includes('.'))value+=(value===''||value==='-'?'0.':'.')}else if(value==='0'||value==='-0')value=(value.startsWith('-')?'-':'')+key;else value+=key;input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}))});
 $('resume').addEventListener('click',()=>{showView('practice');focusQuestion()});
 $('table-grid').addEventListener('input',event=>{const input=event.target.closest('[data-cell]'),q=activeQuestion();if(!input||!isTableQuestion(q)||state.active?.reviewing)return;const limit=q.mode==='unitDiff'?1:3;input.value=input.value.replace(/\D/g,'').slice(0,limit);q.tableValues||={};q.tableValues[input.dataset.cell]=input.value;q.tableWrongKeys=(q.tableWrongKeys||[]).filter(key=>key!==input.dataset.cell);input.classList.remove('wrong');q.tableStatus='已修改，请再次检查整表。';$('table-summary').textContent=q.tableStatus;queueSave()});
 $('table-check').addEventListener('click',checkTable);$('table-next').addEventListener('click',nextQuestion);

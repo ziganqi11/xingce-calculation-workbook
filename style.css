@@ -124,8 +124,7 @@ body.demo-open{overflow:hidden}
 @media(max-width:700px){.division-card{max-height:96dvh;border-radius:17px}.division-card-head{padding:16px 17px 13px}.division-card-head h2{font-size:20px}.division-meta{padding:12px 17px}.division-stage{margin:0 17px;min-height:220px}.division-board{padding:22px 18px 38px}.division-math{font-size:clamp(22px,5vw,28px)}.division-narration{padding:14px 17px 10px;min-height:82px;font-size:13px}.division-progress{margin:0 17px 15px}.division-controls{padding:0 17px 18px;gap:8px}.division-controls button{min-width:0;padding:10px 12px;font-size:13px}.division-controls>div{gap:7px}}
 @media(max-width:390px){.division-controls{flex-wrap:wrap}.division-controls>div{margin-left:auto}.division-meta strong{font-size:15px}}
 
-/* Keep the stage setting visible and move the question upward for handwriting/keypad room. */
-.stage-field{margin-bottom:12px}
+/* Keep the question high enough for the always-visible keypad. */
 .exercise .question-box{justify-content:flex-start;padding-top:clamp(16px,3vh,38px)}
 .question-box:not(.idle) .question{margin:17px 0 18px}
 .question-box.is-math .question{margin:12px 0 15px}
@@ -133,8 +132,9 @@ body.demo-open{overflow:hidden}
 .exercise{overflow-y:auto;overscroll-behavior:contain}
 @media(max-width:980px) and (min-width:701px){
   .setup>.mode-field{grid-column:1;grid-row:2}
-  .setup>.stage-field{grid-column:1;grid-row:3;margin:8px 0 0}
-  .setup>.quick-fields{grid-row:2/4;align-self:center}
+  .setup>.font-field{grid-column:1;grid-row:3;margin:8px 0 0}
+  .setup>.hard-mode-note{grid-column:2;grid-row:3;align-self:center}
+  .setup>.quick-fields{grid-row:2;align-self:center}
   .setup>.advanced-settings{grid-row:4}
   .setup>#resume{grid-row:3}
 }
@@ -210,3 +210,18 @@ body.demo-open{overflow:hidden}
 @media(max-width:760px){.idle-art{width:min(68%,220px);height:165px}.illustrated-empty{min-height:205px}.illustrated-empty img{height:120px}}
 /* The practice layout's ID rule must not override the inactive view state. */
 #practice:not(.active){display:none}
+
+/* Paper typography and compact permanent input panel. */
+body{font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif}
+body[data-font="kai"]{font-family:"Kaiti SC","STKaiti","KaiTi",serif}
+body[data-font="sans"]{font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif}
+.hard-mode-note{margin:-5px 0 14px;color:#426b74;font-size:12px;line-height:1.5}
+.unused-cell{background:repeating-linear-gradient(135deg,#f0f5f4 0 4px,#e8f0ee 4px 8px);border-radius:6px}
+.answer-keypad{margin:9px 0 10px;padding:9px;width:min(100%,330px)}
+.keypad-grid{gap:5px}
+.keypad-grid button{min-height:39px}
+.keypad-head{margin-bottom:5px}
+@media(max-width:980px) and (min-width:701px){
+  .setup>.hard-mode-note{margin:0}
+  .setup>.font-field{margin-bottom:0}
+}

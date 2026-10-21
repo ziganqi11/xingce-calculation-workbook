@@ -1,4 +1,4 @@
-const CACHE = 'xingce-workbook-shell-v13';
+const CACHE = 'xingce-workbook-shell-v14';
 const SHELL = ['./', './index.html', './style.css', './app.js', './division.js', './manifest.json', './icon.svg', './assets/study-calf.svg', './assets/study-notes.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
