@@ -198,3 +198,15 @@ body.demo-open{overflow:hidden}
 .table-grid.unit-diff .practice-table th{font-size:12px}
 .table-grid.unit-diff .practice-table input{height:33px;font-size:13px}
 @media(max-width:700px){.question-box.is-table{overflow:visible;padding-top:7px}.table-area{display:block;flex:none}.table-grid{max-height:none;overflow-x:auto;overflow-y:visible}.practice-table{border-spacing:2px}.practice-table input{height:34px}.table-grid.unit-diff .practice-table{min-width:300px}}
+
+/* Original study illustrations appear only in empty states; question space stays clear. */
+.idle-art{display:block;width:min(80%,290px);height:clamp(160px,27vh,250px);object-fit:contain;margin:0 auto 10px;filter:drop-shadow(0 13px 22px rgba(38,67,72,.10))}
+.question-box:not(.idle) .idle-art{display:none}
+.question-box.idle .question-hint{margin-top:6px}
+.question-box.idle .question{font-size:clamp(20px,2.1vw,27px);margin:16px 0 10px}
+.illustrated-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:250px;padding:24px 16px}
+.illustrated-empty img{display:block;width:min(75%,200px);height:150px;object-fit:contain;filter:drop-shadow(0 8px 15px rgba(38,67,72,.09))}
+.illustrated-empty p{max-width:260px;margin:3px 0 0}
+@media(max-width:760px){.idle-art{width:min(68%,220px);height:165px}.illustrated-empty{min-height:205px}.illustrated-empty img{height:120px}}
+/* The practice layout's ID rule must not override the inactive view state. */
+#practice:not(.active){display:none}
