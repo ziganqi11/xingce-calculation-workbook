@@ -70,6 +70,7 @@
         <div id="question-box" class="question-box idle">
           <div id="question-hint" class="question-hint">资料分析 · 可自由调整</div>
           <div id="question" class="question">从基期、增量或直除开始，把计算过程留在旁边。</div>
+          <button id="division-trigger" class="demo-trigger" type="button" aria-haspopup="dialog" hidden><span aria-hidden="true">▶</span> 逐步竖式演示</button>
           <div id="answer-area" class="answer-area" hidden>
             <label for="answer">你的答案</label>
             <div id="answer-rule" class="answer-rule"></div>
@@ -109,6 +110,17 @@
       <div id="review-note" class="item-details"></div>
     </div>
   </div>
+  <div id="division-overlay" class="division-overlay" hidden>
+    <section class="division-card" role="dialog" aria-modal="true" aria-labelledby="division-title">
+      <header class="division-card-head"><div><span class="eyebrow">计算过程</span><h2 id="division-title">五除三 · 竖式直除</h2></div><button id="division-close" class="division-close" type="button" aria-label="关闭竖式演示">×</button></header>
+      <div class="division-meta"><div><span>当前算式</span><strong id="division-expression"></strong></div><span id="division-step-counter">准备开始</span></div>
+    <div id="division-stage" class="division-stage"><div id="division-board" class="division-board"></div></div>
+      <div id="division-narration" class="division-narration" aria-live="polite">从高位开始试商。</div>
+      <div class="division-progress"><div id="division-progress-fill"></div></div>
+      <footer class="division-controls"><button id="division-replay" class="secondary" type="button">↺ 重播</button><div><button id="division-pause" class="secondary" type="button">暂停</button><button id="division-next" class="primary" type="button">下一步 →</button></div></footer>
+    </section>
+  </div>
+  <script src="./division.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>

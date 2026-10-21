@@ -202,6 +202,7 @@ function renderPractice(){
   $('exercise-title').textContent=a?`${modeNames[a.settings.mode]} · ${a.settings.level==='4'?'自定义':(['','入门','熟练','冲刺'][+a.settings.level])}`:'准备好就开始';
   $('question-box').classList.toggle('idle',!q);
   $('question-box').classList.toggle('is-math',!!q&&['add3','sub3','addsub3','add4','mul3x1','div3x1','mul2x2','big9','mulEstimate','div53'].includes(q.mode));
+  $('division-trigger').hidden = !(q?.mode === 'div53' && q.division);
   $('answer-area').hidden=!q;
   $('question-hint').textContent=q?`${modeNames[q.mode]||'资料分析'} · ${q.retryOf?'错题重练':'专项计算'}`:'资料分析 · 可自由调整';
   if(q?.division&&a.settings.divisionStyle==='fraction'){
@@ -259,6 +260,7 @@ document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>show
 $('level').addEventListener('change',()=>{const p=presets[$('level').value];if(p){$('min').value=p.min;$('max').value=p.max;$('target').value=p.target}});
 for(const id of ['mode','feedback-mode','level','count','min','max','target','precision','numerator-digits','denominator-digits','tolerance','division-style','repeat-errors'])$(id).addEventListener('change',()=>{if(id==='feedback-mode'&&$('feedback-mode').value==='race'&&$('count').value==='15')$('count').value='10';state.settings=readSettings();queueSave()});
 $('start').addEventListener('click',startPractice);
+$('division-trigger').addEventListener('click',()=>window.LongDivisionDemo.open(activeQuestion(),state.active?.settings));
 $('resume').addEventListener('click',()=>{showView('practice');$('answer').focus()});
 $('submit').addEventListener('click',()=>submit());$('answer').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();state.active?.reviewing?nextQuestion():submit()}});
 $('skip').addEventListener('click',()=>submit('skip'));$('next').addEventListener('click',nextQuestion);$('finish').addEventListener('click',finishPractice);
