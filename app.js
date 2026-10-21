@@ -48,14 +48,24 @@ async function load(){
     state.settings.level='3';
     if(!['song','kai','sans'].includes(state.settings.fontFamily))state.settings.fontFamily='song';
     const migratedSettings=JSON.stringify(state.settings)!==JSON.stringify(source.settings||{});
+    let migratedActive=false;
     if(state.active){
       state.active.questionStartedAt=Date.now();
+      if(!state.active.reviewing)for(const q of state.active.questions){
+        if(q.mode!=='unitDiff'||q.answer==='45 格全部正确')continue;
+        q.prompt='只填小减大（本位不够减、向前借 1）的 45 格。';
+        q.answer='45 格全部正确';
+        q.explanation='每格 = 上方小数 + 10 − 左侧大数；如 0−9=1、1−9=2。';
+        q.tableWrongKeys=(q.tableWrongKeys||[]).filter(key=>{const [row,col]=key.split('-').map(Number);return Number.isInteger(row)&&Number.isInteger(col)&&col<row});
+        q.tableStatus='已保留旧表的填写内容；现在只检查小减大的 45 格。';
+        migratedActive=true;
+      }
       const byId=new Map(state.active.questions.map(q=>[q.id,q]));
       for(const answer of state.active.answers||[])answer.question=byId.get(answer.question?.id)||answer.question;
     }
     loaded=true; setStatus(remote?'记录已连接 · 同时保存到此设备':'离线可练 · 记录保存在此设备');
     fillSettings(); renderAll();
-    if(migratedSettings||source!==local||(remote&&source!==remote)||source===recovered){dirty=true;flush()}
+    if(migratedSettings||migratedActive||source!==local||(remote&&source!==remote)||source===recovered){dirty=true;flush()}
     else if(recovered)try{localStorage.removeItem(pendingKey)}catch{}
   }catch(err){setStatus(`读取记录失败：${err.message}`,true)}
 }
