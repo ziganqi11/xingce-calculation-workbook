@@ -1,4 +1,4 @@
-const CACHE = 'xingce-workbook-shell-v8';
+const CACHE = 'xingce-workbook-shell-v11';
 const SHELL = ['./', './index.html', './style.css', './app.js', './division.js', './manifest.json', './icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -15,5 +15,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(fetch(request).catch(() => caches.match('./index.html')));
     return;
   }
-  event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
+  event.respondWith(fetch(request).then(response => {
+    if (response.ok) { const copy=response.clone(); caches.open(CACHE).then(cache => cache.put(request, copy)); }
+    return response;
+  }).catch(() => caches.match(request)));
 });

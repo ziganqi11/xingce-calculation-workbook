@@ -123,3 +123,78 @@ body.demo-open{overflow:hidden}
 .division-controls{padding:0 27px 24px}.division-controls>div{display:flex;gap:9px}.division-controls button{min-width:108px}
 @media(max-width:700px){.division-card{max-height:96dvh;border-radius:17px}.division-card-head{padding:16px 17px 13px}.division-card-head h2{font-size:20px}.division-meta{padding:12px 17px}.division-stage{margin:0 17px;min-height:220px}.division-board{padding:22px 18px 38px}.division-math{font-size:clamp(22px,5vw,28px)}.division-narration{padding:14px 17px 10px;min-height:82px;font-size:13px}.division-progress{margin:0 17px 15px}.division-controls{padding:0 17px 18px;gap:8px}.division-controls button{min-width:0;padding:10px 12px;font-size:13px}.division-controls>div{gap:7px}}
 @media(max-width:390px){.division-controls{flex-wrap:wrap}.division-controls>div{margin-left:auto}.division-meta strong{font-size:15px}}
+
+/* Keep the stage setting visible and move the question upward for handwriting/keypad room. */
+.stage-field{margin-bottom:12px}
+.exercise .question-box{justify-content:flex-start;padding-top:clamp(16px,3vh,38px)}
+.question-box:not(.idle) .question{margin:17px 0 18px}
+.question-box.is-math .question{margin:12px 0 15px}
+.demo-trigger{margin:0 0 16px}
+.exercise{overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:980px) and (min-width:701px){
+  .setup>.mode-field{grid-column:1;grid-row:2}
+  .setup>.stage-field{grid-column:1;grid-row:3;margin:8px 0 0}
+  .setup>.quick-fields{grid-row:2/4;align-self:center}
+  .setup>.advanced-settings{grid-row:4}
+  .setup>#resume{grid-row:3}
+}
+
+/* Touch keypad: the first nine keys are the familiar 3 × 3 digits. */
+.keypad-toggle{margin-top:8px;min-height:40px;padding:8px 13px;font-size:13px}
+.answer-keypad{width:min(100%,330px);margin:10px 0 16px;padding:11px;border:1px solid #c7dadd;border-radius:14px;background:#f8fbfa;box-shadow:0 10px 24px #1d4c6222}
+.keypad-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;color:#59717f;font-size:12px}
+.keypad-head span{flex:1}.keypad-head button{border:0;border-radius:7px;background:#e7f0f1;color:#31576b;padding:6px 8px;min-height:34px}
+.keypad-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.keypad-grid button{min-height:45px;border:1px solid #c7dadd;border-radius:9px;background:white;color:#203d50;font-size:21px;font-weight:650;touch-action:manipulation}
+.keypad-grid button:hover,.keypad-grid button:focus-visible{background:#e9f4f4;border-color:#7fb2b9}
+.keypad-grid button:active{background:#dcecee;transform:scale(.97)}
+
+/* Prevent iPad text selection/copy callouts while writing in the scratch area. */
+.scratch,.scratch *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.scratch button,.scratch input{touch-action:manipulation}
+.scratch .canvas-wrap,.scratch canvas{touch-action:none}
+.scratch textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}
+
+/* A single tap now reveals both complete division forms. */
+.division-card{width:min(1180px,100%)}
+.division-meta{flex-wrap:wrap}.division-meta #division-answer{font-size:14px;color:#217263}
+.division-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:15px;align-items:start;min-height:0;overflow:auto;padding:0 24px 5px}
+.division-pane{min-width:0}.division-pane h3{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 9px;color:#294a5d;font-size:16px}
+.division-pane h3 span{color:#778b94;font-size:11px;font-weight:400}
+.division-pane .division-stage{height:auto;min-height:235px;margin:0;overflow-x:auto;overflow-y:visible}
+.division-board{padding:20px 16px 30px}
+.division-math{font-size:clamp(19px,2.2vw,28px)}
+.division-row{animation:none}
+.division-reverse{min-width:max-content;padding:8px 9px 16px;font-family:Consolas,"Courier New",monospace;font-variant-numeric:tabular-nums}
+.reverse-row{padding:9px 9px 11px;border-bottom:1px solid #dce8e8}
+.reverse-equation,.reverse-result{display:grid;grid-template-columns:max-content 16px max-content;align-items:baseline;gap:9px;white-space:pre;font-size:clamp(14px,1.5vw,18px);line-height:1.45}
+.reverse-equation{color:#425f6d}.reverse-equation span:last-child{color:#a75437}
+.reverse-result{margin-top:4px;padding-top:5px;border-top:2px solid #dda789;color:#287969}
+.reverse-result span:last-child{color:#60808b;font-size:.86em}
+.reverse-row b{color:#bf7655;text-align:center;font-weight:700}
+.reverse-final{padding:12px 10px 0;color:#236b60;font-size:14px;font-weight:700}
+.division-narration{min-height:0;padding:12px 27px 18px;font-size:12px;border-top:1px solid #e8eeee}
+@media(max-width:700px){.division-columns{grid-template-columns:1fr;padding:0 15px 6px;gap:18px}.division-pane .division-stage{min-height:0}.division-board{padding:17px 10px 25px}.division-narration{padding:12px 17px 16px}.division-card-head h2{font-size:20px}}
+
+/* Editable, compact whole-table drills. Red marks apply only to filled mistakes. */
+.question-box.is-table{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;min-height:0;overflow:hidden;text-align:left;padding:14px 0 0}
+.question-box.is-table .question{margin:9px 0 10px;font-size:15px;line-height:1.45;font-weight:600}
+.question-box.is-table .question-hint{font-size:12px}
+.table-area{display:flex;flex-direction:column;flex:1;width:100%;min-width:0;min-height:0}
+.table-grid{flex:1;width:100%;min-height:0;overflow:auto;overscroll-behavior:contain;padding-bottom:4px}
+.practice-table{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed;font-variant-numeric:tabular-nums}
+.practice-table caption{text-align:left;font-size:12px;color:var(--muted);padding:0 0 7px}
+.practice-table th{height:31px;border-radius:7px;background:#e7f0f0;color:#2d5868;font-size:13px;font-weight:750;text-align:center}
+.practice-table th:first-child{background:#d4e6e8}
+.practice-table td{padding:0}
+.practice-table input{display:block;width:100%;min-width:0;height:36px;padding:2px 1px;border:1px solid #cbdcdd;border-radius:7px;background:#fff;color:#213e50;text-align:center;font-size:15px;font-weight:600;touch-action:manipulation}
+.practice-table input:focus{border-color:#5199a9;background:#f1faf9}
+.practice-table input.wrong{border:2px solid #ca5049;background:#fff0ee;color:#a62924;box-shadow:0 0 0 1px #f3bbb7}
+.practice-table input:disabled{opacity:1;background:#eaf5ef;color:#287454;border-color:#b8dac8}
+.table-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:10px}
+.table-actions button{min-height:41px;white-space:nowrap}
+.table-summary{flex:1 1 190px;color:#526d7a;font-size:12px;line-height:1.5}
+.table-grid.unit-diff .practice-table{min-width:300px;border-spacing:2px}
+.table-grid.unit-diff .practice-table th{font-size:12px}
+.table-grid.unit-diff .practice-table input{height:33px;font-size:13px}
+@media(max-width:700px){.question-box.is-table{overflow:visible;padding-top:7px}.table-area{display:block;flex:none}.table-grid{max-height:none;overflow-x:auto;overflow-y:visible}.practice-table{border-spacing:2px}.practice-table input{height:34px}.table-grid.unit-diff .practice-table{min-width:300px}}

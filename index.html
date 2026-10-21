@@ -25,19 +25,19 @@
     <main id="practice" class="view active">
       <aside class="setup panel">
         <div class="panel-head"><span class="eyebrow">练习设置</span><span class="muted">按自己的节奏来</span></div>
-        <label class="field">练习题型<select id="mode">
-          <optgroup label="基础计算"><option value="add3">三位数加法</option><option value="sub3">三位数减法</option><option value="addsub3">三位数加减</option><option value="add4">四数相加</option><option value="mul3x1">三位数乘一位数</option><option value="div3x1">三位数除一位数</option><option value="mul2x2">两位数乘两位数</option><option value="big9">大九九乘法表</option><option value="mulEstimate">乘法估算</option></optgroup>
+        <label class="field mode-field">练习题型<select id="mode">
+          <optgroup label="基础计算"><option value="add3">三位数加法</option><option value="sub3">三位数减法</option><option value="addsub3">三位数加减</option><option value="add4">四数相加</option><option value="mul3x1">三位数乘一位数</option><option value="div3x1">三位数除一位数</option><option value="mul2x2">两位数乘两位数</option><option value="big9">大九九乘法表</option><option value="unitDiff">本位差表</option><option value="mulEstimate">乘法估算</option></optgroup>
           <optgroup label="资料分析计算">
           <option value="div53">五除三（五位数÷三位数）</option><option value="base">求基期量</option><option value="growth">求增长量</option><option value="rate">求增长率</option><option value="current">求现期量</option><option value="share">求比重</option><option value="baseShare">求基期比重</option><option value="average">求平均数</option><option value="growthCompare">比较增长量</option><option value="mixed">资料分析混合</option>
           </optgroup>
         </select></label>
+        <label class="field stage-field">练习阶段 / 自定义进度<select id="level"><option value="1">入门</option><option value="2">熟练</option><option value="3">冲刺</option><option value="4">自定义数值</option></select></label>
         <div class="two-fields quick-fields">
           <label class="field">练习方式<select id="feedback-mode"><option value="training">训练：每题看答案</option><option value="race">竞速：做完一组再看答案</option></select></label>
           <label class="field">本组题量<input id="count" type="number" min="1" max="200" value="15" inputmode="numeric"></label>
         </div>
-        <details class="advanced-settings"><summary>更多设置</summary>
+        <details class="advanced-settings"><summary>自定义范围、精度与位数</summary>
         <div class="two-fields">
-          <label class="field">当前阶段<select id="level"><option value="1">入门</option><option value="2">熟练</option><option value="3">冲刺</option><option value="4">自定义</option></select></label>
           <label class="field">每题目标秒数<input id="target" type="number" min="1" max="600" value="30" inputmode="numeric"></label>
         </div>
         <div class="two-fields">
@@ -45,7 +45,7 @@
           <label class="field">数据上限<input id="max" type="number" min="20" max="999999" value="9999" inputmode="numeric"></label>
         </div>
         <div class="two-fields">
-          <label class="field">结果保留<select id="precision"><option value="0">整数</option><option value="1">1 位小数</option><option value="2">2 位小数</option><option value="3">3 位小数</option><option value="4">4 位小数</option></select></label>
+          <label class="field">结果保留小数位（0～8）<input id="precision" type="number" min="0" max="8" step="1" value="0" inputmode="numeric"></label>
           <div></div>
         </div>
         <div class="two-fields">
@@ -70,13 +70,22 @@
         <div id="question-box" class="question-box idle">
           <div id="question-hint" class="question-hint">资料分析 · 可自由调整</div>
           <div id="question" class="question">从基期、增量或直除开始，把计算过程留在旁边。</div>
-          <button id="division-trigger" class="demo-trigger" type="button" aria-haspopup="dialog" hidden><span aria-hidden="true">▶</span> 逐步竖式演示</button>
+          <button id="division-trigger" class="demo-trigger" type="button" aria-haspopup="dialog" hidden><span aria-hidden="true">∥</span> 查看完整双竖式</button>
           <div id="answer-area" class="answer-area" hidden>
             <label for="answer">你的答案</label>
             <div id="answer-rule" class="answer-rule"></div>
             <div class="answer-row"><input id="answer" type="text" inputmode="decimal" autocomplete="off" placeholder="输入结果"><button id="submit" class="primary">提交答案</button></div>
+            <button id="keypad-toggle" class="secondary keypad-toggle" type="button" aria-expanded="false" aria-controls="answer-keypad">▦ 九宫格输入</button>
+            <div id="answer-keypad" class="answer-keypad" hidden>
+              <div class="keypad-head"><span>点按数字填写结果</span><button type="button" data-key="backspace">⌫ 退格</button><button type="button" data-key="clear">清空</button></div>
+              <div class="keypad-grid"><button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="sign">±</button><button type="button" data-key="0">0</button><button type="button" data-key="decimal">.</button></div>
+            </div>
             <div id="feedback" class="feedback" aria-live="polite"></div>
             <div class="question-actions"><button id="skip" class="text-button">跳过此题</button><button id="next" class="secondary" hidden>下一题 →</button></div>
+          </div>
+          <div id="table-area" class="table-area" hidden>
+            <div id="table-grid" class="table-grid"></div>
+            <div class="table-actions"><span id="table-summary" class="table-summary" aria-live="polite">填好后检查，错格会标红。</span><button id="table-check" class="primary" type="button">检查整表</button><button id="table-next" class="secondary" type="button" hidden>下一题 →</button></div>
           </div>
         </div>
         <div class="exercise-foot"><span>提示：可以在右侧写计算过程；每道题都会保留用时和演草。</span><button id="finish" class="text-button" hidden>结束本组</button></div>
@@ -112,12 +121,13 @@
   </div>
   <div id="division-overlay" class="division-overlay" hidden>
     <section class="division-card" role="dialog" aria-modal="true" aria-labelledby="division-title">
-      <header class="division-card-head"><div><span class="eyebrow">计算过程</span><h2 id="division-title">五除三 · 竖式直除</h2></div><button id="division-close" class="division-close" type="button" aria-label="关闭竖式演示">×</button></header>
-      <div class="division-meta"><div><span>当前算式</span><strong id="division-expression"></strong></div><span id="division-step-counter">准备开始</span></div>
-    <div id="division-stage" class="division-stage"><div id="division-board" class="division-board"></div></div>
-      <div id="division-narration" class="division-narration" aria-live="polite">从高位开始试商。</div>
-      <div class="division-progress"><div id="division-progress-fill"></div></div>
-      <footer class="division-controls"><button id="division-replay" class="secondary" type="button">↺ 重播</button><div><button id="division-pause" class="secondary" type="button">暂停</button><button id="division-next" class="primary" type="button">下一步 →</button></div></footer>
+      <header class="division-card-head"><div><span class="eyebrow">完整计算过程</span><h2 id="division-title">五除三 · 双竖式</h2></div><button id="division-close" class="division-close" type="button" aria-label="关闭竖式">×</button></header>
+      <div class="division-meta"><div><span>当前算式</span><strong id="division-expression"></strong></div><strong id="division-answer"></strong></div>
+      <div class="division-columns">
+        <section class="division-pane" aria-label="正式竖式"><h3>正式竖式</h3><div class="division-stage"><div id="division-board" class="division-board"></div></div></section>
+        <section class="division-pane" aria-label="反向竖式"><h3>反向竖式 <span>用 | 列出完整做差</span></h3><div class="division-stage"><div id="division-reverse" class="division-reverse"></div></div></section>
+      </div>
+      <p id="division-narration" class="division-narration"></p>
     </section>
   </div>
   <script src="./division.js" defer></script>
